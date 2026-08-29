@@ -59,14 +59,69 @@ Dashboard:
 
 ### API
 
+The controller exposes telemetry and decision endpoints.  
+The dashboard proxies a few convenience routes for the UI.
+
+```mermaid
+flowchart LR
+  UI[Web UI :8080] -->|GET /sensors| C[controller :3000]
+  UI -->|POST /agent/decide| C
+  UI -->|GET /api/status| D[dashboard :8080]
+  UI -->|POST /api/run| D
+  D -->|calls| C
+  C -->|writes| USD[scenes/latest.usda]
+  D -->|renders| PREVIEW[previews/]
+```
+
+**Controller (`localhost:3000`)**
+
+| Method | Path | Purpose | Input | Output |
+|--------|------|---------|-------|--------|
+| `GET` | `/sensors` | current telemetry for all appliances | none | JSON array of `{id, temperature, vibration}` |
+| `POST` | `/agent/decide` | classify status + recolor USD | JSON body: `{sensors:[{id, temperature, vibration}]}` | JSON array of decisions |
+
+**Dashboard (`localhost:8080`)**
+
+| Method | Path | Purpose | Input | Output |
+|--------|------|---------|-------|--------|
+| `GET` | `/api/list` | list appliances | none | JSON array of device ids |
+| `GET` | `/api/status` | latest decisions + reasons | none | JSON object with device statuses |
+| `POST` | `/api/run` | run full pipeline with custom thresholds | query `te`, `tw` | redirects to `/` after processing |
+| `GET` | `/api/scene/latest.usda` | download the generated USD file | none | `latest.usda` binary |
+
+**Example: decide request/response**
+
+```bash
+curl -X POST http://localhost:3000/agent/decide \
+  -H 'Content-Type: application/json' \
+  -d '{"sensors":[{"id":"fridge","temperature":90,"vibration":2}]}'
+```
+
+```json
+[
+  {
+    "id": "fridge",
+    "status": "error",
+    "temperature": 90,
+    "vibration": 2,
+    "reason": "error threshold (local heuristic, T>=85.0 or V>=9.0)"
+  }
+]
+```
+
+**Example: sensors response**
+
 ```bash
 curl http://localhost:3000/sensors
-curl -X POST http://localhost:3000/agent/decide -H 'Content-Type: application/json' \
-     -d '{"sensors":[{"id":"fridge","temperature":90,"vibration":2}]}'
-curl http://localhost:8080/api/list
-curl http://localhost:8080/api/status
-curl -X POST "http://localhost:8080/api/run?te=70&tw=60"
-curl http://localhost:8080/api/scene/latest.usda
+```
+
+```json
+[
+  {"id":"fridge","temperature":85,"vibration":1},
+  {"id":"toaster","temperature":78,"vibration":6},
+  {"id":"kettle","temperature":45,"vibration":1},
+  {"id":"ceil_light","temperature":72,"vibration":4}
+]
 ```
 
 ---
