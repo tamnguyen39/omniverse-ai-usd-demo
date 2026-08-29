@@ -31,10 +31,10 @@ FIXTURES = {
         {"id": "ceil_light", "x": -1, "y": 5, "z": 0, "temperature": 40, "vibration": 1},  # running
     ],
     "mixed": [
-        {"id": "fridge", "x": -3, "y": 2, "z": 1, "temperature": 90, "vibration": 3},  # error  -> đỏ
-        {"id": "toaster", "x": 0, "y": -4, "z": 3, "temperature": 80, "vibration": 8},  # warning -> vàng cam
-        {"id": "kettle", "x": 4, "y": 1, "z": -2, "temperature": 50, "vibration": 2},  # running -> xanh lam
-        {"id": "ceil_light", "x": -1, "y": 5, "z": 0, "temperature": 78, "vibration": 5},  # warning -> vàng cam
+        {"id": "fridge", "x": -3, "y": 2, "z": 1, "temperature": 90, "vibration": 3},  # error
+        {"id": "toaster", "x": 0, "y": -4, "z": 3, "temperature": 80, "vibration": 8},  # warning
+        {"id": "kettle", "x": 4, "y": 1, "z": -2, "temperature": 50, "vibration": 2},  # running
+        {"id": "ceil_light", "x": -1, "y": 5, "z": 0, "temperature": 78, "vibration": 5},  # warning
     ],
 }
 

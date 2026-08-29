@@ -10,7 +10,7 @@ from pxr import Usd, UsdGeom, Gf
 
 SCENE = sys.argv[1]
 OUT = sys.argv[2]
-CAM = Gf.Vec3d(0, -900, 250)  # camera chính diện, hướng vào gốc tọa độ
+CAM = Gf.Vec3d(0, -900, 250)  # front camera, looking at origin
 
 shutil.copyfile(SCENE, OUT)
 stage = Usd.Stage.Open(OUT)

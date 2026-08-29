@@ -5,7 +5,7 @@
 //
 // NVIDIA-best-practice note: this service is the "perception + decide" half of the
 // perception->control->autonomy loop. It is NOT a closed control loop: it proposes
-// actions, it does not actuate devices. See REVIEW.md ("thật vs giả lập").
+// actions, it does not actuate devices. See REVIEW.md for "real vs simulated" notes.
 //
 // ponytail: single file, Express only (user's strongest stack). No auth — demo-local
 // scope. If deployed to a real VPS, add auth/TLS (out of 2-day scope, see PLAN §2H).
@@ -58,13 +58,13 @@ const TOOL = {
   type: "function",
   function: {
     name: "set_device_action",
-    description: "Quyết định trạng thái cho MỘT thiết bị công nghiệp dựa trên cảm biến.",
+    description: "Classify the status of ONE appliance from sensor readings.",
     parameters: {
       type: "object",
       properties: {
-        device_id: { type: "string", description: "id của thiết bị, ví dụ dev_1" },
+        device_id: { type: "string", description: "device id, e.g. fridge" },
         status: { type: "string", enum: STATUSES },
-        reason: { type: "string", description: "Giải thích ngắn gọn bằng tiếng Việt" },
+        reason: { type: "string", description: "short reason in English" },
       },
       required: ["device_id", "status", "reason"],
     },
@@ -80,9 +80,9 @@ async function callAgent(sensors) {
   const model = process.env.OPENROUTER_MODEL || "meta-llama/llama-3.1-8b-instruct:free";
   const fallbackModel = process.env.OPENROUTER_MODEL_FALLBACK || "";
   const sysPrompt =
-    "Bạn là agent điều khiển công nghiệp chạy autonomy (tự động, không cần người). " +
-    "Với MỖI thiết bị trong dữ liệu cảm biến, bạn PHẢI gọi tool set_device_action đúng một lần. " +
-    "Quy tắc: temperature>=85 hoặc vibration>=9 -> error; temperature>75 hoặc vibration>7 -> warning; còn lại -> running.";
+    "You are an industrial autonomy agent. " +
+    "For EACH device in the sensor payload, you MUST call set_device_action exactly once. " +
+    "Rules: temperature>=85 or vibration>=9 -> error; temperature>75 or vibration>7 -> warning; else running.";
 
   const body = {
     model,
@@ -91,7 +91,7 @@ async function callAgent(sensors) {
     max_tokens: 1024,
     messages: [
       { role: "system", content: sysPrompt },
-      { role: "user", content: "Dữ liệu cảm biến: " + JSON.stringify(sensors) },
+      { role: "user", content: "Sensor readings: " + JSON.stringify(sensors) },
     ],
   };
 

@@ -1,6 +1,6 @@
-// web/dashboard.js — OpenUSD Kitchen Monitor (single front view + bilingual + device table).
-// Serves static previews and triggers the pipeline via CLI. Keeps architecture:
-// controller -> sync_to_usd.py; image via usdrecord (Storm/CPU Mac).
+// web/dashboard.js — OpenUSD Kitchen Monitor (single front view + device table).
+// Serves static previews and triggers the pipeline. Keeps architecture:
+// controller -> sync_to_usd.py; image via usdrecord (macOS; optional on Linux).
 import express from "express";
 import { execFile } from "node:child_process";
 import { readFile, readdir, mkdir, unlink } from "node:fs/promises";
@@ -24,7 +24,7 @@ async function listScenes() {
 // Latest scene + baseline (front only). Summary JSON is written by sync_to_usd.py.
 app.get("/api/list", async (_req, res) => {
   const scenes = await listScenes();
-  const latest = scenes.includes("latest.usda") ? "latest.usda" : (scenes.find((f) => f.startsWith("scene_run_")) || null);
+  const latest = scenes.includes("latest.usda") ? "latest.usda" : null;
   res.json({
     latest,
     baseline: scenes.includes("kitchen_baseline.usda") ? "kitchen_baseline.usda" : null,
@@ -32,14 +32,12 @@ app.get("/api/list", async (_req, res) => {
   });
 });
 
-// Render front view -> PNG (flatten + add Cam, then usdrecord).
+// Render front view -> PNG (copy + add Cam, then usdrecord).
 app.get("/api/render/:name", async (req, res) => {
   const name = basename(req.params.name);
   const usd = join(ROOT, "scenes", name);
   const png = join(PREVIEWS, name.replace(extname(name), "_front.png"));
   await mkdir(PREVIEWS, { recursive: true });
-  // wrapper lives in scenes/ so the relative reference @../assets/... resolves;
-  // hidden temp file, removed after render.
   const wrap = join(ROOT, "scenes", ".vw_" + name);
   await new Promise((res, rej) =>
     execFile("python3", ["usd_connector/make_views.py", usd, wrap], { cwd: ROOT, maxBuffer: 20 * 1024 * 1024 }, (e) => (e ? rej(e) : res()))
@@ -94,7 +92,7 @@ app.get("/api/scene/:name", async (req, res) => {
 app.get("/", (_req, res) => res.type("html").send(DASHBOARD_HTML));
 app.listen(PORT, () => console.log(`dashboard on http://localhost:${PORT}`));
 
-const DASHBOARD_HTML = `<!doctype html><html lang="vi"><head><meta charset="utf-8">
+const DASHBOARD_HTML = `<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>OpenUSD Kitchen Monitor</title>
 <style>
@@ -143,31 +141,31 @@ const DASHBOARD_HTML = `<!doctype html><html lang="vi"><head><meta charset="utf-
 </style></head>
 <body>
 <header>
-  <h1 id="title">🏠 OpenUSD Kitchen Monitor — Agent → USD</h1>
-  <button class="lang" id="langBtn" onclick="toggleLang()">EN</button>
+  <h1 id="title">OpenUSD Kitchen Monitor — Agent → USD</h1>
+  <button class="lang" id="langBtn">VI</button>
 </header>
 
 <section>
-  <h2 data-i18n="controlsTitle">Điều khiển pipeline</h2>
+  <h2>Pipeline controls</h2>
   <div class="controls">
-    <label class="ctl" title="Nhiệt độ cảnh báo (°C)"><span data-i18n="tempWarn">Nhiệt CB</span><input id="tw" value="75"></label>
-    <label class="ctl" title="Nhiệt độ lỗi (°C)"><span data-i18n="tempErr">Nhiệt lỗi</span><input id="te" value="85"></label>
-    <label class="ctl" title="Rung cảnh báo"><span data-i18n="vibWarn">Rung CB</span><input id="vw" value="7"></label>
-    <label class="ctl" title="Rung lỗi"><span data-i18n="vibErr">Rung lỗi</span><input id="ve" value="9"></label>
-    <button id="run">▶ <span data-i18n="run">Chạy pipeline</span></button>
+    <label class="ctl" title="Warning temperature (°C)"><span>Temp warn</span><input id="tw" value="75"></label>
+    <label class="ctl" title="Error temperature (°C)"><span>Temp error</span><input id="te" value="85"></label>
+    <label class="ctl" title="Warning vibration"><span>Vib warn</span><input id="vw" value="7"></label>
+    <label class="ctl" title="Error vibration"><span>Vib error</span><input id="ve" value="9"></label>
+    <button id="run">▶ Run pipeline</button>
   </div>
   <div class="logic" id="logic"></div>
 </section>
 
 <section>
-  <h2 data-i18n="devicesTitle">Thiết bị &amp; trạng thái (dữ liệu ghi vào OpenUSD)</h2>
+  <h2>Devices & status (data written to OpenUSD)</h2>
   <table id="devices">
     <thead><tr>
-      <th data-i18n="thDevice">Thiết bị</th>
-      <th data-i18n="thStatus">Trạng thái</th>
-      <th data-i18n="thTemp">Nhiệt độ</th>
-      <th data-i18n="thVib">Rung</th>
-      <th data-i18n="thReason">Lý do</th>
+      <th>Device</th>
+      <th>Status</th>
+      <th>Temp</th>
+      <th>Vibration</th>
+      <th>Reason</th>
     </tr></thead>
     <tbody id="devicesBody"></tbody>
   </table>
@@ -175,17 +173,17 @@ const DASHBOARD_HTML = `<!doctype html><html lang="vi"><head><meta charset="utf-
 
 <section>
   <h2 style="display:flex;justify-content:space-between;align-items:center">
-    <span data-i18n="viewTitle">Ảnh chính diện (render USD)</span>
+    <span>Front view (USD render)</span>
     <span class="d" id="viewMeta" style="text-transform:none;letter-spacing:0"></span>
   </h2>
   <div class="dual">
     <div class="pane">
-      <h3 data-i18n="baseLabel">Nguyên bản</h3>
+      <h3>Baseline</h3>
       <div class="viewer"><img id="imgBase" src="" alt="baseline render"><div class="spinner" id="spBase" style="display:none"></div></div>
       <div class="pathrow"><span class="ptxt" id="pathImgBase">—</span><button class="copybtn" onclick="copyPath('pathImgBase')">Copy</button></div>
     </div>
     <div class="pane">
-      <h3 data-i18n="latestLabel">Mới nhất</h3>
+      <h3>Latest</h3>
       <div class="viewer"><img id="imgLatest" src="" alt="latest render"><div class="spinner" id="spLatest" style="display:none"></div></div>
       <div class="pathrow"><span class="ptxt" id="pathImgLatest">—</span><button class="copybtn" onclick="copyPath('pathImgLatest')">Copy</button></div>
     </div>
@@ -193,15 +191,15 @@ const DASHBOARD_HTML = `<!doctype html><html lang="vi"><head><meta charset="utf-
 </section>
 
 <section>
-  <h2 data-i18n="usdTitle">USD source</h2>
+  <h2>USD source</h2>
   <div class="dual">
     <div class="pane">
-      <h3 data-i18n="baseLabel">Nguyên bản</h3>
+      <h3>Baseline</h3>
       <pre class="usd" id="usdBase">—</pre>
       <div class="pathrow"><span class="ptxt" id="pathUsdBase">—</span><button class="copybtn" onclick="copyPath('pathUsdBase')">Copy</button></div>
     </div>
     <div class="pane">
-      <h3 data-i18n="latestLabel">Mới nhất</h3>
+      <h3>Latest</h3>
       <pre class="usd" id="usdLatest">—</pre>
       <div class="pathrow"><span class="ptxt" id="pathUsdLatest">—</span><button class="copybtn" onclick="copyPath('pathUsdLatest')">Copy</button></div>
     </div>
@@ -209,14 +207,37 @@ const DASHBOARD_HTML = `<!doctype html><html lang="vi"><head><meta charset="utf-
 </section>
 
 <section>
-  <h2 data-i18n="logTitle">Log</h2>
+  <h2>Log</h2>
   <pre class="usd" id="log">—</pre>
 </section>
 
 <script>
 const I18N = {
+  en: {
+    controlsTitle: "Pipeline controls",
+    tempWarn: "Temp warn",
+    tempErr: "Temp error",
+    vibWarn: "Vib warn",
+    vibErr: "Vib error",
+    run: "Run pipeline",
+    devicesTitle: "Devices & status (data written to OpenUSD)",
+    thDevice: "Device", thStatus: "Status", thTemp: "Temp", thVib: "Vibration", thReason: "Reason",
+    viewTitle: "Front view (USD render)",
+    baseLabel: "Baseline",
+    latestLabel: "Latest",
+    usdTitle: "USD source",
+    logTitle: "Log",
+    logic: '<b>When you click "Run pipeline":</b> <br>'
+      + '1. The agent reads each <b>4 appliances</b> telemetry (temperature, vibration) — fridge, toaster, kettle, ceil_light.<br>'
+      + '2. Classification: <span class="r-badge error">error</span> if temp ≥ Error OR vibration ≥ Error; '
+      + '<span class="r-badge warning">warning</span> if temp &gt; Warning OR vibration &gt; Warning; '
+      + '<span class="r-badge running">running</span> otherwise.<br>'
+      + '3. OpenUSD <b>receives</b> this: the connector writes status + temperature + vibration + reason into the scene and '
+      + '<b>recolors</b> each appliance mesh in the Pixar Kitchen Set (error=red, warning=amber, running=blue).',
+    noData: "No run yet — click Run pipeline.",
+    running: "Running pipeline…"
+  },
   vi: {
-    title: "🏠 OpenUSD Kitchen Monitor — Agent → USD",
     controlsTitle: "Điều khiển pipeline",
     tempWarn: "Nhiệt CB",
     tempErr: "Nhiệt lỗi",
@@ -239,50 +260,25 @@ const I18N = {
       + '<b>đổi màu mesh</b> thiết bị trong Pixar Kitchen Set (error=đỏ, warning=vàng cam, running=xanh lam).',
     noData: "Chưa có dữ liệu — bấm Chạy pipeline.",
     running: "Đang chạy pipeline…"
-  },
-  en: {
-    title: "🏠 OpenUSD Kitchen Monitor — Agent → USD",
-    controlsTitle: "Pipeline controls",
-    tempGroup: "Temperature thresholds (°C)",
-    tempWarn: "Warning (above → warning)",
-    tempErr: "Error (at/above → error)",
-    vibGroup: "Vibration thresholds",
-    vibWarn: "Warning (above → warning)",
-    vibErr: "Error (at/above → error)",
-    runTitle: "Try it now",
-    run: "Run pipeline",
-    devicesTitle: "Devices & status (data written to OpenUSD)",
-    thDevice: "Device", thStatus: "Status", thTemp: "Temp", thVib: "Vibration", thReason: "Reason",
-    viewTitle: "Front view (USD render)",
-    baseLabel: "Baseline",
-    latestLabel: "Latest",
-    usdTitle: "USD source",
-    logTitle: "Log",
-    logic: '<b>When you click "Run pipeline":</b> <br>'
-      + '1. The agent reads each <b>4 appliances</b> telemetry (temperature, vibration) — fridge, toaster, kettle, ceil_light.<br>'
-      + '2. Classification: <span class="r-badge error">error</span> if temp ≥ Error OR vibration ≥ Error; '
-      + '<span class="r-badge warning">warning</span> if temp &gt; Warning OR vibration &gt; Warning; '
-      + '<span class="r-badge running">running</span> otherwise.<br>'
-      + '3. OpenUSD <b>receives</b> this: the connector writes status + temperature + vibration + reason into the scene and '
-      + '<b>recolors</b> each appliance mesh in the Pixar Kitchen Set (error=red, warning=amber, running=blue).',
-    noData: "No run yet — click Run pipeline.",
-    running: "Running pipeline…"
   }
 };
-const STATUS_LABEL = { running: ["bình thường", "running"], warning: ["cảnh báo", "warning"], error: ["lỗi", "error"] };
+const STATUS_LABEL = { running: ["running", "running"], warning: ["warning", "warning"], error: ["error", "error"] };
 
 let LANG = localStorage.getItem("lang") || "en";
 function t(k){ return I18N[LANG][k]; }
 
 function applyLang(){
   document.documentElement.lang = LANG;
-  document.getElementById("title").textContent = t("title");
+  document.getElementById("langBtn").textContent = LANG === "en" ? "VI" : "EN";
   document.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = t(el.dataset.i18n); });
-  document.getElementById("langBtn").textContent = LANG === "vi" ? "EN" : "VI";
   document.getElementById("logic").innerHTML = t("logic");
   renderDevices(window._summary);
 }
-function toggleLang(){ LANG = LANG === "vi" ? "en" : "vi"; localStorage.setItem("lang", LANG); applyLang(); }
+document.getElementById("langBtn").onclick = () => {
+  LANG = LANG === "en" ? "vi" : "en";
+  localStorage.setItem("lang", LANG);
+  applyLang();
+};
 
 function renderDevices(summary){
   const body = document.getElementById("devicesBody");
@@ -294,9 +290,8 @@ function renderDevices(summary){
   }
   body.innerHTML = summary.devices.map(d => {
     const st = d.status;
-    const lbl = STATUS_LABEL[st] ? STATUS_LABEL[st][LANG === "vi" ? 0 : 1] : st;
     return '<tr><td>' + d.id + '</td>'
-      + '<td><span class="pill ' + st + '">' + lbl + '</span></td>'
+      + '<td><span class="pill ' + st + '">' + st + '</span></td>'
       + '<td>' + d.temperature + '°C</td>'
       + '<td>' + d.vibration + '</td>'
       + '<td class="reason">' + (d.reason || "") + '</td></tr>';

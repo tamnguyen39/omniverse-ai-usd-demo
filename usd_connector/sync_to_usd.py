@@ -28,9 +28,9 @@ from pxr import Usd, UsdGeom, Sdf, Gf
 
 # ponytail: 3 hues maximally distinct (blue / amber / red) for instant readability
 STATUS_COLOR = {
-    "running": Gf.Vec3f(0.0, 0.45, 1.0),  # xanh lam
-    "warning": Gf.Vec3f(1.0, 0.85, 0.0),  # vàng cam
-    "error":   Gf.Vec3f(1.0, 0.05, 0.05), # đỏ
+    "running": Gf.Vec3f(0.0, 0.45, 1.0),  # blue
+    "warning": Gf.Vec3f(1.0, 0.85, 0.0),  # amber
+    "error":   Gf.Vec3f(1.0, 0.05, 0.05), # red
 }
 
 # Appliances monitored. `asset_path` = prim path inside the referenced Kitchen Set.

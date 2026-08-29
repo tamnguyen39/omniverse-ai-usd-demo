@@ -35,8 +35,8 @@ test("reconcile: full LLM output -> exactly 4 valid decisions, no dup", () => {
   const agentOut = {
     decisions: [
       { device_id: "fridge", status: "running", reason: "ok" },
-      { device_id: "toaster", status: "warning", reason: "nóng" },
-      { device_id: "kettle", status: "error", reason: "quá nóng" },
+      { device_id: "toaster", status: "warning", reason: "hot" },
+      { device_id: "kettle", status: "error", reason: "overheat" },
       { device_id: "ceil_light", status: "running", reason: "ok" },
     ],
   };
@@ -54,8 +54,8 @@ test("reconcile: fallback heuristic fills missing device (free-model safety)", (
   const agentOut = {
     decisions: [
       { device_id: "fridge", status: "running", reason: "ok" },
-      { device_id: "toaster", status: "warning", reason: "nóng" },
-      { device_id: "kettle", status: "error", reason: "quá nóng" },
+      { device_id: "toaster", status: "warning", reason: "hot" },
+      { device_id: "kettle", status: "error", reason: "overheat" },
     ],
   };
   const out = reconcile(SENSORS, agentOut);
