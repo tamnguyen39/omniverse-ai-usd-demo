@@ -53,7 +53,7 @@ Open **http://localhost:8080**
 <details>
 <summary><strong>Demo</strong></summary>
 
-<p><video src="media/demo.mp4" controls style="max-width:100%;border-radius:6px"></video></p>
+<p><a href="media/demo.mp4" download><img src="media/demo.mp4" alt="Demo" style="max-width:100%;border-radius:6px"></a></p>
 </details>
 
 Dashboard:
