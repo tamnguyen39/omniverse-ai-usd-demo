@@ -1,0 +1,29 @@
+# dependencies
+controller/node_modules/
+controller/package-lock.json
+web/node_modules/
+web/package-lock.json
+
+# env
+.env
+.env.local
+
+# python cache
+__pycache__/
+*.pyc
+
+# Pixar Kitchen Set asset (download separately; see README asset section)
+assets/KitchenSet/
+assets/Kitchen_set.zip
+
+# generated artifacts
+previews/
+scenes/
+.run/
+
+# macOS metadata
+.DS_Store
+
+# Hermes Agent local config (not part of project)
+.hermes/
+NOTES.md

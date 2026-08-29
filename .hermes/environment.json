@@ -1,0 +1,14 @@
+{
+  "root": "/Users/mri/workspace/nvidia/omniverse-ai-usd-demo",
+  "language": "multi",
+  "recipe": {
+    "bootstrap": [],
+    "build": [],
+    "test": ["./verify.sh"],
+    "start": []
+  },
+  "detected": {
+    "source": "manual",
+    "note": "Multi-part demo: Node controller + Python USD connector. verify.sh runs controller npm test + USD compliance check + CPU preview."
+  }
+}
