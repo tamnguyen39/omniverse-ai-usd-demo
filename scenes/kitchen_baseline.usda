@@ -1,0 +1,15 @@
+#usda 1.0
+(
+    defaultPrim = "World"
+    upAxis = "Z"
+)
+
+def Xform "World"
+{
+    def Xform "Kitchen" (
+        prepend references = @../assets/KitchenSet/Kitchen_set/Kitchen_set.usd@
+    )
+    {
+    }
+}
+

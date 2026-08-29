@@ -1,0 +1,14 @@
+{
+  "name": "ai-usd-controller",
+  "version": "1.0.0",
+  "description": "AI controller: synthetic sensors + LLM tool-calling agent (OpenUSD demo)",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test server.test.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
