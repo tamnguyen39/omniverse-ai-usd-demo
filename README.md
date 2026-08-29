@@ -50,6 +50,12 @@ will simply not be generated.
 
 Open **http://localhost:8080**
 
+<details>
+<summary><strong>Demo</strong></summary>
+
+<p><video src="media/demo.mp4" controls style="max-width:100%;border-radius:6px"></video></p>
+</details>
+
 Dashboard:
 - **Front view** renders via `usdrecord` (macOS; Linux may skip if unavailable).
 - **Devices & status** table with temperature, vibration, and reason.
