@@ -349,7 +349,10 @@ document.getElementById("run").onclick = async (e) => {
   const p = new URLSearchParams({ tw: tw.value, te: te.value, vw: vw.value, ve: ve.value });
   const r = await api("/api/run?" + p.toString(), { method: "POST" });
   document.getElementById("log").textContent = (r.log || r.error || "");
-  if(r.ok){ window._summary = r.summary; }
+  if (r.ok) {
+    window._summary = r.summary;
+    renderDevices(window._summary);
+  }
   await refresh();
   btn.disabled = false;
 };
